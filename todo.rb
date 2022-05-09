@@ -62,6 +62,30 @@ class SessionPersistence
   def delete_list(id)
     @session[:lists].reject! { |list| list[:id] == id }
   end
+
+  def set_error_message(message)
+    @session[:error] = message
+  end
+
+  def set_success_message(message)
+    @session[:success] = message
+  end
+
+  def delete_error_message
+    @session.delete(:error)
+  end
+
+  def delete_success_message
+    @session.delete(:success)
+  end
+
+  def error_message_present?
+    @session[:error]
+  end
+
+  def success_message_present?
+    @session[:success]
+  end
 end
 
 def load_list(id)
@@ -69,7 +93,7 @@ def load_list(id)
   
   return list if list
 
-  session[:error] = "The specified list was not found."
+  @storage.set_error_message "The specified list was not found."
   redirect "/lists"
 end
 
@@ -119,12 +143,12 @@ post "/lists" do
 
   error = error_for_list_name(list_name)
   if error
-    session[:error] = error
+    @storage.set_error_message(error)
     erb :new_list, layout: :layout
   else
     id = next_element_id(@storage.all_lists) ## session[:lists])
     @storage.add_list({ id: id, name: list_name, todos: [] }) ## session[:lists] << { id: id, name: list_name, todos: [] }
-    session[:success] = "The list has been created."
+    @storage.set_success_message "The list has been created."
     redirect "/lists"
   end
 end
@@ -151,7 +175,7 @@ post "/lists/:id" do
 
   error = error_for_list_name(list_name)
   if error
-    session[:error] = error
+    @storage.set_error_message(error)
     erb :edit_list, layout: :layout
   else
     @list[:name] = list_name
@@ -180,13 +204,13 @@ post "/lists/:list_id/todos" do
 
   error = error_for_todo(text)
   if error
-    session[:error] = error
+    @storage.set_error_message(error)
     erb :list, layout: :layout
   else
     id = next_element_id(@list[:todos])
     @list[:todos] << { id: id, name: text, completed: false }
 
-    session[:success] = "The todo was added."
+    @storage.set_success_message "The todo was added."
     redirect "/lists/#{@list_id}"
   end
 end
@@ -201,7 +225,7 @@ post "/lists/:list_id/todos/:id/destroy" do
   if env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest"
     status 204
   else
-    session[:success] = "The todo has been deleted."
+    @storage.set_success_message "The todo has been deleted."
     redirect "/lists/#{@list_id}"
   end
 end
@@ -216,7 +240,7 @@ post "/lists/:list_id/todos/:id" do
   todo = @list[:todos].find { |todo| todo[:id] == todo_id }
   todo[:completed] = is_completed
 
-  session[:success] = "The todo has been updated."
+  @storage.set_success_message "The todo has been updated."
   redirect "/lists/#{@list_id}"
 end
 
@@ -229,7 +253,7 @@ post "/lists/:id/complete_all" do
     todo[:completed] = true
   end
 
-  session[:success] = "All todos have been completed."
+  @storage.set_success_message "All todos have been completed."
   redirect "/lists/#{@list_id}"
 end
 

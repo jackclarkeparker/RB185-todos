@@ -17,15 +17,15 @@
       </div>
     </header>
 
-    <% if session[:error] %>
+    <% if @storage.error_message_present? %>
       <div class="flash error">
-        <p><%= session.delete(:error) %></p>
+        <p><%= @storage.delete_error_message %></p>
       </div>
     <% end %>
 
-    <% if session[:success] %>
+    <% if @storage.success_message_present? %>
       <div class="flash success">
-        <p><%= session.delete(:success) %></p>
+        <p><%= @storage.delete_success_message %></p>
       </div>
     <% end %>
 
@@ -34,3 +34,4 @@
     </main>
   </body>
 </html>
+
