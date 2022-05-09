@@ -55,8 +55,9 @@ class SessionPersistence
     @session[:lists]
   end
 
-  def add_list(list)
-    @session[:lists] << list
+  def create_new_list(list_name)
+    id = next_element_id(@session[:lists])
+    @session[:lists] << { id: id, name: list_name, todos: [] } 
   end
 
   def delete_list(id)
@@ -86,6 +87,13 @@ class SessionPersistence
   def success_message_present?
     @session[:success]
   end
+
+  private
+
+  def next_element_id(elements)
+    max = elements.map { |element| element[:id] }.max || 0
+    max + 1
+  end
 end
 
 def load_list(id)
@@ -111,11 +119,6 @@ def error_for_todo(name)
   if !(1..100).cover? name.size
     "Todo must be between 1 and 100 characters."
   end
-end
-
-def next_element_id(elements)
-  max = elements.map { |element| element[:id] }.max || 0
-  max + 1
 end
 
 before do
@@ -146,8 +149,7 @@ post "/lists" do
     @storage.set_error_message(error)
     erb :new_list, layout: :layout
   else
-    id = next_element_id(@storage.all_lists) ## session[:lists])
-    @storage.add_list({ id: id, name: list_name, todos: [] }) ## session[:lists] << { id: id, name: list_name, todos: [] }
+    @storage.create_new_list(list_name)
     @storage.set_success_message "The list has been created."
     redirect "/lists"
   end
