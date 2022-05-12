@@ -4,8 +4,6 @@ require "tilt/erubis"
 
 require_relative "database_persistence"
 
-require 'pry'
-
 configure do
   enable :sessions
   set :session_secret, "secret"
@@ -194,7 +192,6 @@ post "/lists/:list_id/todos/:id" do
   todo_id = params[:id].to_i
   is_completed = params[:completed] == "true"
   @storage.update_todo_status(@list_id, todo_id, is_completed)
-  # binding.pry
   session[:success] = "The todo has been updated."
   redirect "/lists/#{@list_id}"
 end
